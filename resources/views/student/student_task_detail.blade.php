@@ -596,39 +596,30 @@
             try {
                 const response = await fetch(form.action, {
                     method: 'POST',
-                    body: formData, // FormData will automatically set Content-Type: multipart/form-data
+                    body: formData,
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     }
                 });
 
-                // Check if response is JSON before parsing
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const result = await response.json();
+                // Langsung parse JSON tanpa cek content-type
+                const result = await response.json();
 
-                    if (result.success) {
-                        // Use custom modal instead of alert
-                        showCustomAlert(result.message, 'success');
-                        setTimeout(() => {
-                            window.location.reload(); // Reload page to display latest status
-                        }, 1500); // Give user time to read message
-                    } else {
-                        let errorMessage = 'Failed to submit task: ' + (result.message || 'An error occurred.');
-                        if (result.errors) {
-                            let errorMessages = '';
-                            for (const key in result.errors) {
-                                errorMessages += result.errors[key].join('\n') + '\n';
-                            }
-                            errorMessage += '\nValidation error:\n' + errorMessages;
-                        }
-                        showCustomAlert(errorMessage, 'error');
-                    }
+                if (result.success) {
+                    showCustomAlert(result.message, 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
                 } else {
-                    // If not JSON, there might be an HTML error from the server
-                    const errorText = await response.text();
-                    console.error('Server responded with non-JSON:', errorText);
-                    showCustomAlert('Server error. Please check console for more details.', 'error');
+                    let errorMessage = 'Failed to submit task: ' + (result.message || 'An error occurred.');
+                    if (result.errors) {
+                        let errorMessages = '';
+                        for (const key in result.errors) {
+                            errorMessages += result.errors[key].join('\n') + '\n';
+                        }
+                        errorMessage += '\nValidation error:\n' + errorMessages;
+                    }
+                    showCustomAlert(errorMessage, 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
